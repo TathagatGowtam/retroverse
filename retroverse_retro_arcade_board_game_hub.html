@@ -1,0 +1,1488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Retroverse - Ultimate Retro Arcade & Board Game Hub</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts for Retro Vibe -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            synth: {
+              bg: '#0a0a16',
+              card: '#121226',
+              pink: '#ff007f',
+              cyan: '#00f0ff',
+              yellow: '#ffe600',
+              purple: '#9d00ff',
+              green: '#00ff66'
+            }
+          },
+          fontFamily: {
+            arcade: ['"Press Start 2P"', 'cursive'],
+            tech: ['"Orbitron"', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom CRT Scanline and Synthwave Effects */
+    body {
+      background-color: #080811;
+      background-image: 
+        linear-gradient(rgba(255, 0, 127, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.05) 1px, transparent 1px);
+      background-size: 30px 30px;
+      color: #e2e8f0;
+      user-select: none;
+      -webkit-user-select: none;
+      overflow-x: hidden;
+    }
+
+    /* CRT Overlay Effect */
+    .crt-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background-size: 100% 4px, 6px 100%;
+      pointer-events: none;
+      z-index: 99;
+      opacity: 0.85;
+    }
+
+    /* Neon Glow Utilities */
+    .glow-pink {
+      text-shadow: 0 0 5px #ff007f, 0 0 15px #ff007f, 0 0 30px #ff007f;
+    }
+    .glow-cyan {
+      text-shadow: 0 0 5px #00f0ff, 0 0 15px #00f0ff, 0 0 30px #00f0ff;
+    }
+    .glow-yellow {
+      text-shadow: 0 0 5px #ffe600, 0 0 15px #ffe600;
+    }
+    .box-glow-pink {
+      box-shadow: 0 0 15px rgba(255, 0, 127, 0.4), inset 0 0 10px rgba(255, 0, 127, 0.2);
+    }
+    .box-glow-cyan {
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.4), inset 0 0 10px rgba(0, 240, 255, 0.2);
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #0a0a16; }
+    ::-webkit-scrollbar-thumb { background: #ff007f; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #00f0ff; }
+
+    /* Touch Control Buttons styling */
+    .touch-btn {
+      touch-action: manipulation;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      backdrop-filter: blur(4px);
+    }
+    .touch-btn:active {
+      background: rgba(0, 240, 255, 0.3);
+      transform: scale(0.95);
+    }
+  </style>
+</head>
+<body class="font-tech min-h-screen flex flex-col justify-between relative antialiased">
+
+  <!-- Optional CRT Scanlines Effect Container -->
+  <div id="crt-screen" class="crt-overlay"></div>
+
+  <!-- HEADER / BRANDING BAR -->
+  <header class="sticky top-0 z-50 bg-synth-bg/90 backdrop-blur-md border-b border-synth-pink/30 px-4 py-3 shadow-lg">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+      
+      <!-- Logo & Title -->
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="switchGame('hub')">
+        <i class="fa-solid fa-gamepad text-2xl text-synth-pink animate-pulse"></i>
+        <h1 class="font-arcade text-xl sm:text-2xl text-transparent bg-clip-text bg-gradient-to-r from-synth-pink via-synth-yellow to-synth-cyan glow-pink tracking-wider">
+          RETROVERSE
+        </h1>
+      </div>
+
+      <!-- Action & System Toggles -->
+      <div class="flex items-center space-x-3 text-xs sm:text-sm">
+        <button id="hub-btn" onclick="switchGame('hub')" class="hidden px-3 py-1.5 rounded bg-synth-purple/40 border border-synth-purple text-synth-cyan hover:bg-synth-purple/70 transition font-arcade text-[10px]">
+          <i class="fa-solid fa-grid-2 mr-1"></i> MENU
+        </button>
+
+        <button onclick="toggleSound()" id="sound-btn" class="px-3 py-1.5 rounded bg-synth-card border border-synth-cyan/50 text-synth-cyan hover:border-synth-cyan transition flex items-center space-x-1.5">
+          <i id="sound-icon" class="fa-solid fa-volume-high text-synth-green"></i>
+          <span class="hidden sm:inline">AUDIO</span>
+        </button>
+
+        <button onclick="toggleCRT()" id="crt-btn" class="px-3 py-1.5 rounded bg-synth-card border border-synth-pink/50 text-synth-pink hover:border-synth-pink transition flex items-center space-x-1.5">
+          <i class="fa-solid fa-tv"></i>
+          <span class="hidden sm:inline">CRT SCAN</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-grow max-w-7xl w-full mx-auto p-3 sm:p-6 flex flex-col justify-center items-center">
+
+    <!-- GAME HUB (DASHBOARD) -->
+    <div id="game-hub" class="w-full transition-all duration-300">
+      
+      <!-- Hero Banner -->
+      <div class="text-center my-6 sm:my-8 space-y-3">
+        <h2 class="font-arcade text-lg sm:text-2xl text-synth-cyan glow-cyan">SELECT YOUR CHALLENGE</h2>
+        <p class="text-gray-400 text-sm sm:text-base max-w-2xl mx-auto">
+          Relive the golden era of 80s arcades and tabletop strategy. Choose a title below to play!
+        </p>
+      </div>
+
+      <!-- Category Filter Tabs -->
+      <div class="flex justify-center space-x-2 sm:space-x-4 mb-8">
+        <button onclick="filterHub('all')" id="tab-all" class="px-4 py-2 rounded-full font-arcade text-xs border border-synth-pink bg-synth-pink text-white box-glow-pink">ALL</button>
+        <button onclick="filterHub('arcade')" id="tab-arcade" class="px-4 py-2 rounded-full font-arcade text-xs border border-synth-cyan/30 text-gray-300 hover:border-synth-cyan">ARCADE</button>
+        <button onclick="filterHub('board')" id="tab-board" class="px-4 py-2 rounded-full font-arcade text-xs border border-synth-yellow/30 text-gray-300 hover:border-synth-yellow">BOARD</button>
+      </div>
+
+      <!-- Games Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        
+        <!-- Game 1: Pac-Man -->
+        <div data-cat="arcade" onclick="switchGame('pacman')" class="group relative bg-synth-card rounded-xl p-5 border border-synth-pink/30 hover:border-synth-pink transition-all duration-300 hover:-translate-y-1 cursor-pointer box-glow-pink flex flex-col justify-between">
+          <div class="flex items-center space-x-4">
+            <div class="p-3 bg-yellow-500/20 text-yellow-400 rounded-lg text-3xl">
+              <i class="fa-solid fa-ghost"></i>
+            </div>
+            <div>
+              <h3 class="font-arcade text-sm text-synth-yellow group-hover:text-white transition">MAZE CHASER</h3>
+              <p class="text-xs text-gray-400 mt-1">Eat power pellets & avoid ghosts in the neon maze.</p>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-gray-800 flex justify-between items-center text-xs">
+            <span class="text-synth-pink font-arcade text-[10px]">BEST: <span id="hs-pacman">0</span></span>
+            <span class="text-synth-cyan group-hover:translate-x-1 transition">PLAY NOW <i class="fa-solid fa-arrow-right"></i></span>
+          </div>
+        </div>
+
+        <!-- Game 2: Space Invaders -->
+        <div data-cat="arcade" onclick="switchGame('invaders')" class="group relative bg-synth-card rounded-xl p-5 border border-synth-cyan/30 hover:border-synth-cyan transition-all duration-300 hover:-translate-y-1 cursor-pointer box-glow-cyan flex flex-col justify-between">
+          <div class="flex items-center space-x-4">
+            <div class="p-3 bg-cyan-500/20 text-synth-cyan rounded-lg text-3xl">
+              <i class="fa-solid fa-spaghetti-monster-flying"></i>
+            </div>
+            <div>
+              <h3 class="font-arcade text-sm text-synth-cyan group-hover:text-white transition">GALAXY DEFENDER</h3>
+              <p class="text-xs text-gray-400 mt-1">Defend Earth from waves of descending alien invaders.</p>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-gray-800 flex justify-between items-center text-xs">
+            <span class="text-synth-pink font-arcade text-[10px]">BEST: <span id="hs-invaders">0</span></span>
+            <span class="text-synth-cyan group-hover:translate-x-1 transition">PLAY NOW <i class="fa-solid fa-arrow-right"></i></span>
+          </div>
+        </div>
+
+        <!-- Game 3: Snake -->
+        <div data-cat="arcade" onclick="switchGame('snake')" class="group relative bg-synth-card rounded-xl p-5 border border-synth-green/30 hover:border-synth-green transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col justify-between">
+          <div class="flex items-center space-x-4">
+            <div class="p-3 bg-green-500/20 text-synth-green rounded-lg text-3xl">
+              <i class="fa-solid fa-staff-snake"></i>
+            </div>
+            <div>
+              <h3 class="font-arcade text-sm text-synth-green group-hover:text-white transition">RETRO SNAKE</h3>
+              <p class="text-xs text-gray-400 mt-1">Classic Nokia style snake. Eat pixel apples and grow.</p>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-gray-800 flex justify-between items-center text-xs">
+            <span class="text-synth-pink font-arcade text-[10px]">BEST: <span id="hs-snake">0</span></span>
+            <span class="text-synth-cyan group-hover:translate-x-1 transition">PLAY NOW <i class="fa-solid fa-arrow-right"></i></span>
+          </div>
+        </div>
+
+        <!-- Game 4: Breakout -->
+        <div data-cat="arcade" onclick="switchGame('breakout')" class="group relative bg-synth-card rounded-xl p-5 border border-synth-purple/30 hover:border-synth-purple transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col justify-between">
+          <div class="flex items-center space-x-4">
+            <div class="p-3 bg-purple-500/20 text-synth-purple rounded-lg text-3xl">
+              <i class="fa-solid fa-cubes"></i>
+            </div>
+            <div>
+              <h3 class="font-arcade text-sm text-synth-purple group-hover:text-white transition">BRICK BREAKER</h3>
+              <p class="text-xs text-gray-400 mt-1">Smash neon brick formations with physics ball bounces.</p>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-gray-800 flex justify-between items-center text-xs">
+            <span class="text-synth-pink font-arcade text-[10px]">BEST: <span id="hs-breakout">0</span></span>
+            <span class="text-synth-cyan group-hover:translate-x-1 transition">PLAY NOW <i class="fa-solid fa-arrow-right"></i></span>
+          </div>
+        </div>
+
+        <!-- Game 5: Pong -->
+        <div data-cat="arcade" onclick="switchGame('pong')" class="group relative bg-synth-card rounded-xl p-5 border border-synth-pink/30 hover:border-synth-pink transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col justify-between">
+          <div class="flex items-center space-x-4">
+            <div class="p-3 bg-pink-500/20 text-synth-pink rounded-lg text-3xl">
+              <i class="fa-solid fa-table-tennis-paddle-ball"></i>
+            </div>
+            <div>
+              <h3 class="font-arcade text-sm text-synth-pink group-hover:text-white transition">NEON PONG</h3>
+              <p class="text-xs text-gray-400 mt-1">The origin of video games. Play vs AI or Local 2P.</p>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-gray-800 flex justify-between items-center text-xs">
+            <span class="text-synth-pink font-arcade text-[10px]">BEST: <span id="hs-pong">0</span></span>
+            <span class="text-synth-cyan group-hover:translate-x-1 transition">PLAY NOW <i class="fa-solid fa-arrow-right"></i></span>
+          </div>
+        </div>
+
+        <!-- Game 6: Tic Tac Toe -->
+        <div data-cat="board" onclick="switchGame('tictactoe')" class="group relative bg-synth-card rounded-xl p-5 border border-synth-yellow/30 hover:border-synth-yellow transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col justify-between">
+          <div class="flex items-center space-x-4">
+            <div class="p-3 bg-yellow-500/20 text-synth-yellow rounded-lg text-3xl">
+              <i class="fa-solid fa-xmark"></i>
+            </div>
+            <div>
+              <h3 class="font-arcade text-sm text-synth-yellow group-hover:text-white transition">TIC-TAC-TOE</h3>
+              <p class="text-xs text-gray-400 mt-1">Noughts & Crosses with unbeatable AI or Local 2P.</p>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-gray-800 flex justify-between items-center text-xs">
+            <span class="text-synth-pink font-arcade text-[10px]">WINS: <span id="hs-tictactoe">0</span></span>
+            <span class="text-synth-cyan group-hover:translate-x-1 transition">PLAY NOW <i class="fa-solid fa-arrow-right"></i></span>
+          </div>
+        </div>
+
+        <!-- Game 7: Connect 4 -->
+        <div data-cat="board" onclick="switchGame('connect4')" class="group relative bg-synth-card rounded-xl p-5 border border-synth-cyan/30 hover:border-synth-cyan transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col justify-between">
+          <div class="flex items-center space-x-4">
+            <div class="p-3 bg-cyan-500/20 text-synth-cyan rounded-lg text-3xl">
+              <i class="fa-solid fa-grid-4"></i>
+            </div>
+            <div>
+              <h3 class="font-arcade text-sm text-synth-cyan group-hover:text-white transition">CONNECT FOUR</h3>
+              <p class="text-xs text-gray-400 mt-1">Drop tokens to connect 4 in a row vertically or diagonally.</p>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-gray-800 flex justify-between items-center text-xs">
+            <span class="text-synth-pink font-arcade text-[10px]">WINS: <span id="hs-connect4">0</span></span>
+            <span class="text-synth-cyan group-hover:translate-x-1 transition">PLAY NOW <i class="fa-solid fa-arrow-right"></i></span>
+          </div>
+        </div>
+
+        <!-- Game 8: Checkers -->
+        <div data-cat="board" onclick="switchGame('checkers')" class="group relative bg-synth-card rounded-xl p-5 border border-synth-pink/30 hover:border-synth-pink transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col justify-between">
+          <div class="flex items-center space-x-4">
+            <div class="p-3 bg-red-500/20 text-red-400 rounded-lg text-3xl">
+              <i class="fa-solid fa-chess-board"></i>
+            </div>
+            <div>
+              <h3 class="font-arcade text-sm text-synth-pink group-hover:text-white transition">RETRO CHECKERS</h3>
+              <p class="text-xs text-gray-400 mt-1">Classic 8x8 draughts board. Jump and king your pieces.</p>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-gray-800 flex justify-between items-center text-xs">
+            <span class="text-synth-pink font-arcade text-[10px]">WINS: <span id="hs-checkers">0</span></span>
+            <span class="text-synth-cyan group-hover:translate-x-1 transition">PLAY NOW <i class="fa-solid fa-arrow-right"></i></span>
+          </div>
+        </div>
+
+        <!-- Game 9: Memory Match -->
+        <div data-cat="board" onclick="switchGame('memory')" class="group relative bg-synth-card rounded-xl p-5 border border-synth-green/30 hover:border-synth-green transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col justify-between">
+          <div class="flex items-center space-x-4">
+            <div class="p-3 bg-green-500/20 text-synth-green rounded-lg text-3xl">
+              <i class="fa-solid fa-clone"></i>
+            </div>
+            <div>
+              <h3 class="font-arcade text-sm text-synth-green group-hover:text-white transition">MEMORY MATCH</h3>
+              <p class="text-xs text-gray-400 mt-1">Flip matching arcade cards under time pressure.</p>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-gray-800 flex justify-between items-center text-xs">
+            <span class="text-synth-pink font-arcade text-[10px]">BEST: <span id="hs-memory">--</span>s</span>
+            <span class="text-synth-cyan group-hover:translate-x-1 transition">PLAY NOW <i class="fa-solid fa-arrow-right"></i></span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- GAME ARENA STAGE (Active Game Window) -->
+    <div id="game-stage" class="hidden w-full max-w-4xl flex flex-col items-center">
+      
+      <!-- Stage Bar / HUD -->
+      <div class="w-full bg-synth-card border border-synth-pink/30 rounded-t-xl p-3 flex justify-between items-center text-xs sm:text-sm">
+        <div class="flex items-center space-x-2">
+          <span id="stage-game-title" class="font-arcade text-synth-yellow glow-yellow">GAME TITLE</span>
+        </div>
+        
+        <div class="flex items-center space-x-4 font-arcade text-[11px]">
+          <div>SCORE: <span id="stage-score" class="text-synth-cyan">0</span></div>
+          <div>HIGH: <span id="stage-highscore" class="text-synth-pink">0</span></div>
+        </div>
+
+        <button onclick="restartCurrentGame()" class="px-2 py-1 rounded bg-synth-purple/40 hover:bg-synth-purple border border-synth-purple text-white transition text-xs flex items-center gap-1">
+          <i class="fa-solid fa-rotate-right"></i> <span class="hidden sm:inline">RESET</span>
+        </button>
+      </div>
+
+      <!-- Canvas Frame Container -->
+      <div class="relative w-full bg-black border-x border-b border-synth-pink/30 rounded-b-xl overflow-hidden flex flex-col items-center justify-center p-2 min-h-[420px]">
+        
+        <!-- Canvas for Arcade Games -->
+        <canvas id="gameCanvas" width="600" height="400" class="max-w-full h-auto bg-black rounded border border-gray-800 shadow-inner"></canvas>
+
+        <!-- Dynamic Container for Board Game DOM Elements -->
+        <div id="board-container" class="hidden w-full max-w-md flex flex-col items-center justify-center my-auto p-4"></div>
+
+        <!-- Overlay Menu (Game Over / Start) -->
+        <div id="game-overlay" class="absolute inset-0 bg-black/85 backdrop-blur-sm flex flex-col justify-center items-center p-6 text-center z-10 hidden">
+          <h2 id="overlay-title" class="font-arcade text-2xl sm:text-3xl text-synth-pink glow-pink mb-3">GAME OVER</h2>
+          <p id="overlay-msg" class="text-gray-300 mb-6 text-sm sm:text-base font-tech">Final Score: 0</p>
+          <button onclick="startActiveGame()" class="px-6 py-3 rounded-full font-arcade text-xs sm:text-sm bg-synth-pink text-white hover:bg-synth-cyan transition box-glow-pink">
+            PLAY AGAIN
+          </button>
+        </div>
+      </div>
+
+      <!-- Dynamic Game Mode Switcher (e.g., 1P vs AI / 2P) -->
+      <div id="game-controls-bar" class="w-full mt-3 flex flex-wrap justify-between items-center text-xs gap-2">
+        <div id="mode-selector" class="flex space-x-2">
+          <!-- Populated dynamically if game supports modes -->
+        </div>
+
+        <!-- Instructions Text -->
+        <div id="game-instructions" class="text-gray-400 text-[11px] italic">
+          Use Arrow Keys or WASD to Move
+        </div>
+      </div>
+
+      <!-- Touch Controls Pad for Mobile Devices -->
+      <div id="touch-controls" class="w-full mt-4 grid grid-cols-3 gap-2 max-w-xs mx-auto text-center sm:hidden">
+        <div></div>
+        <button id="btn-up" class="touch-btn py-3 rounded text-synth-cyan text-lg"><i class="fa-solid fa-caret-up"></i></button>
+        <div></div>
+        <button id="btn-left" class="touch-btn py-3 rounded text-synth-cyan text-lg"><i class="fa-solid fa-caret-left"></i></button>
+        <button id="btn-down" class="touch-btn py-3 rounded text-synth-cyan text-lg"><i class="fa-solid fa-caret-down"></i></button>
+        <button id="btn-right" class="touch-btn py-3 rounded text-synth-cyan text-lg"><i class="fa-solid fa-caret-right"></i></button>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-synth-pink/20 bg-synth-bg/80 py-4 px-4 text-center text-xs text-gray-500 font-tech mt-8">
+    <p>© 2026 RETROVERSE HUB • Built with Pure Web Technologies & Synthesized Audio</p>
+  </footer>
+
+  <!-- SCRIPT ENGINE -->
+  <script>
+    /* ==========================================================================
+       SYNTHESIZED 8-BIT AUDIO ENGINE (Web Audio API)
+       ========================================================================== */
+    let audioCtx = null;
+    let soundEnabled = true;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playSound(type) {
+      if (!soundEnabled) return;
+      initAudio();
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+
+        if (type === 'beep') {
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(400, now);
+          osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+          gain.gain.setValueAtTime(0.1, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+          osc.start(now);
+          osc.stop(now + 0.08);
+        } else if (type === 'score') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523.25, now); // C5
+          osc.frequency.setValueAtTime(659.25, now + 0.05); // E5
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+          osc.start(now);
+          osc.stop(now + 0.15);
+        } else if (type === 'hit') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(150, now);
+          osc.frequency.linearRampToValueAtTime(40, now + 0.1);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+          osc.start(now);
+          osc.stop(now + 0.1);
+        } else if (type === 'gameover') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(300, now);
+          osc.frequency.linearRampToValueAtTime(80, now + 0.4);
+          gain.gain.setValueAtTime(0.25, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
+          osc.start(now);
+          osc.stop(now + 0.4);
+        } else if (type === 'win') {
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.setValueAtTime(554.37, now + 0.1);
+          osc.frequency.setValueAtTime(659.25, now + 0.2);
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
+          osc.start(now);
+          osc.stop(now + 0.35);
+        }
+      } catch (e) {
+        console.log("Audio play error:", e);
+      }
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      const icon = document.getElementById('sound-icon');
+      if (soundEnabled) {
+        icon.className = 'fa-solid fa-volume-high text-synth-green';
+      } else {
+        icon.className = 'fa-solid fa-volume-xmark text-gray-500';
+      }
+    }
+
+    function toggleCRT() {
+      const crt = document.getElementById('crt-screen');
+      crt.classList.toggle('hidden');
+    }
+
+    /* ==========================================================================
+       GLOBAL STATE & ROUTING
+       ========================================================================== */
+    let currentGame = null;
+    let gameLoopReq = null;
+    let score = 0;
+    let gameMode = '1P'; // '1P' or '2P' for supported games
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const boardContainer = document.getElementById('board-container');
+
+    // High Scores initialization from LocalStorage
+    const highScores = {
+      pacman: parseInt(localStorage.getItem('rv_pacman')) || 0,
+      invaders: parseInt(localStorage.getItem('rv_invaders')) || 0,
+      snake: parseInt(localStorage.getItem('rv_snake')) || 0,
+      breakout: parseInt(localStorage.getItem('rv_breakout')) || 0,
+      pong: parseInt(localStorage.getItem('rv_pong')) || 0,
+      tictactoe: parseInt(localStorage.getItem('rv_tictactoe')) || 0,
+      connect4: parseInt(localStorage.getItem('rv_connect4')) || 0,
+      checkers: parseInt(localStorage.getItem('rv_checkers')) || 0,
+      memory: localStorage.getItem('rv_memory') || '--'
+    };
+
+    function updateHighScoreDisplay() {
+      for (const [key, val] of Object.entries(highScores)) {
+        const el = document.getElementById(`hs-${key}`);
+        if (el) el.textContent = val;
+      }
+    }
+
+    function saveHighScore(gameKey, newScore) {
+      if (gameKey === 'memory') {
+        if (highScores.memory === '--' || newScore < parseInt(highScores.memory)) {
+          highScores.memory = newScore;
+          localStorage.setItem('rv_memory', newScore);
+        }
+      } else if (newScore > highScores[gameKey]) {
+        highScores[gameKey] = newScore;
+        localStorage.setItem(`rv_${gameKey}`, newScore);
+      }
+      updateHighScoreDisplay();
+    }
+
+    function filterHub(cat) {
+      const cards = document.querySelectorAll('#game-hub [data-cat]');
+      cards.forEach(card => {
+        if (cat === 'all' || card.dataset.cat === cat) {
+          card.classList.remove('hidden');
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+
+      // Update button styling
+      ['all', 'arcade', 'board'].forEach(t => {
+        const btn = document.getElementById(`tab-${t}`);
+        if (t === cat) {
+          btn.className = "px-4 py-2 rounded-full font-arcade text-xs border border-synth-pink bg-synth-pink text-white box-glow-pink";
+        } else {
+          btn.className = "px-4 py-2 rounded-full font-arcade text-xs border border-gray-700 text-gray-400 hover:border-synth-pink";
+        }
+      });
+    }
+
+    function switchGame(gameKey) {
+      initAudio();
+      if (gameLoopReq) cancelAnimationFrame(gameLoopReq);
+      
+      const hub = document.getElementById('game-hub');
+      const stage = document.getElementById('game-stage');
+      const hubBtn = document.getElementById('hub-btn');
+
+      if (gameKey === 'hub') {
+        currentGame = null;
+        hub.classList.remove('hidden');
+        stage.classList.add('hidden');
+        hubBtn.classList.add('hidden');
+        hideOverlay();
+        return;
+      }
+
+      currentGame = gameKey;
+      hub.classList.add('hidden');
+      stage.classList.remove('hidden');
+      hubBtn.classList.remove('hidden');
+
+      // Update Stage Header
+      const titles = {
+        pacman: 'MAZE CHASER', invaders: 'GALAXY DEFENDER', snake: 'RETRO SNAKE',
+        breakout: 'BRICK BREAKER', pong: 'NEON PONG', tictactoe: 'TIC-TAC-TOE',
+        connect4: 'CONNECT FOUR', checkers: 'RETRO CHECKERS', memory: 'MEMORY MATCH'
+      };
+
+      document.getElementById('stage-game-title').textContent = titles[gameKey];
+      document.getElementById('stage-highscore').textContent = highScores[gameKey];
+      score = 0;
+      document.getElementById('stage-score').textContent = score;
+
+      // Reset controls bar
+      document.getElementById('mode-selector').innerHTML = '';
+
+      // Canvas vs Board DOM setup
+      const isBoard = ['tictactoe', 'connect4', 'checkers', 'memory'].includes(gameKey);
+      if (isBoard) {
+        canvas.classList.add('hidden');
+        boardContainer.classList.remove('hidden');
+      } else {
+        canvas.classList.remove('hidden');
+        boardContainer.classList.add('hidden');
+      }
+
+      startActiveGame();
+    }
+
+    function startActiveGame() {
+      hideOverlay();
+      score = 0;
+      document.getElementById('stage-score').textContent = score;
+
+      switch(currentGame) {
+        case 'pacman': initPacman(); break;
+        case 'invaders': initInvaders(); break;
+        case 'snake': initSnake(); break;
+        case 'breakout': initBreakout(); break;
+        case 'pong': initPong(); break;
+        case 'tictactoe': initTicTacToe(); break;
+        case 'connect4': initConnect4(); break;
+        case 'checkers': initCheckers(); break;
+        case 'memory': initMemory(); break;
+      }
+    }
+
+    function restartCurrentGame() {
+      playSound('beep');
+      startActiveGame();
+    }
+
+    function showOverlay(title, msg) {
+      const overlay = document.getElementById('game-overlay');
+      document.getElementById('overlay-title').textContent = title;
+      document.getElementById('overlay-msg').textContent = msg;
+      overlay.classList.remove('hidden');
+    }
+
+    function hideOverlay() {
+      document.getElementById('game-overlay').classList.add('hidden');
+    }
+
+    /* ==========================================================================
+       KEYBOARD & TOUCH CONTROLS BINDING
+       ========================================================================== */
+    const keys = {};
+    window.addEventListener('keydown', e => {
+      keys[e.code] = true;
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) {
+        e.preventDefault();
+      }
+    });
+    window.addEventListener('keyup', e => { keys[e.code] = false; });
+
+    // Mobile touch button helpers
+    function bindTouchBtn(id, code) {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      btn.addEventListener('touchstart', (e) => { e.preventDefault(); keys[code] = true; });
+      btn.addEventListener('touchend', (e) => { e.preventDefault(); keys[code] = false; });
+      btn.addEventListener('mousedown', () => { keys[code] = true; });
+      btn.addEventListener('mouseup', () => { keys[code] = false; });
+    }
+    bindTouchBtn('btn-up', 'ArrowUp');
+    bindTouchBtn('btn-down', 'ArrowDown');
+    bindTouchBtn('btn-left', 'ArrowLeft');
+    bindTouchBtn('btn-right', 'ArrowRight');
+
+    /* ==========================================================================
+       GAME 1: PAC-MAN / MAZE CHASER
+       ========================================================================== */
+    function initPacman() {
+      document.getElementById('game-instructions').textContent = "Use Arrow Keys to navigate the maze & eat dots.";
+      const tileSize = 20;
+      const map = [
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,2,2,2,2,1,2,2,2,2,2,2,2,1,1,2,2,2,2,2,2,2,1,2,2,2,2,2,2,1],
+        [1,2,1,1,2,1,2,1,1,1,1,1,2,1,1,2,1,1,1,1,1,2,1,2,1,1,1,1,2,1],
+        [1,3,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1,3,1,2,1],
+        [1,2,2,2,2,1,1,2,1,1,2,1,1,1,1,1,1,2,1,1,2,1,1,2,2,2,2,2,2,1],
+        [1,1,1,1,2,1,1,2,1,1,2,1,1,1,1,1,1,2,1,1,2,1,1,2,1,1,1,1,1,1],
+        [0,0,0,1,2,2,2,2,1,1,2,2,2,1,1,2,2,2,1,1,2,2,2,2,1,0,0,0,0,0],
+        [1,1,1,1,2,1,1,2,1,1,1,1,0,1,1,0,1,1,1,1,2,1,1,2,1,1,1,1,1,1],
+        [1,2,2,2,2,1,1,2,2,2,2,2,2,0,0,2,2,2,2,2,2,1,1,2,2,2,2,2,2,1],
+        [1,3,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,3,1,2,1],
+        [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+      ];
+
+      let pac = { x: 14.5 * tileSize, y: 8.5 * tileSize, dirX: 0, dirY: 0, nextX: 0, nextY: 0, speed: 2 };
+      let ghosts = [
+        { x: 13 * tileSize, y: 6 * tileSize, color: '#ff007f', dirX: 1, dirY: 0 },
+        { x: 16 * tileSize, y: 6 * tileSize, color: '#00f0ff', dirX: -1, dirY: 0 }
+      ];
+
+      function update() {
+        if (keys['ArrowUp'] || keys['KeyW']) { pac.nextX = 0; pac.nextY = -1; }
+        if (keys['ArrowDown'] || keys['KeyS']) { pac.nextX = 0; pac.nextY = 1; }
+        if (keys['ArrowLeft'] || keys['KeyA']) { pac.nextX = -1; pac.nextY = 0; }
+        if (keys['ArrowRight'] || keys['KeyD']) { pac.nextX = 1; pac.nextY = 0; }
+
+        // Grid Alignment Check for Direction Swap
+        if (Math.floor(pac.x) % tileSize === 0 && Math.floor(pac.y) % tileSize === 0) {
+          let tileX = Math.floor(pac.x / tileSize) + pac.nextX;
+          let tileY = Math.floor(pac.y / tileSize) + pac.nextY;
+          if (map[tileY] && map[tileY][tileX] !== 1) {
+            pac.dirX = pac.nextX; pac.dirY = pac.nextY;
+          }
+        }
+
+        let nextX = pac.x + pac.dirX * pac.speed;
+        let nextY = pac.y + pac.dirY * pac.speed;
+        let cTileX = Math.floor((nextX + tileSize/2 * pac.dirX) / tileSize);
+        let cTileY = Math.floor((nextY + tileSize/2 * pac.dirY) / tileSize);
+
+        if (map[cTileY] && map[cTileY][cTileX] !== 1) {
+          pac.x = nextX; pac.y = nextY;
+        }
+
+        // Wrap around tunnels
+        if (pac.x < 0) pac.x = canvas.width - tileSize;
+        if (pac.x >= canvas.width) pac.x = 0;
+
+        // Collect Pellets
+        let pTileX = Math.floor((pac.x + tileSize/2) / tileSize);
+        let pTileY = Math.floor((pac.y + tileSize/2) / tileSize);
+        if (map[pTileY] && map[pTileY][pTileX] > 1) {
+          score += (map[pTileY][pTileX] === 3) ? 50 : 10;
+          document.getElementById('stage-score').textContent = score;
+          playSound('score');
+          map[pTileY][pTileX] = 0;
+        }
+
+        // Ghost Movement & Collision
+        ghosts.forEach(g => {
+          g.x += g.dirX * 1.5;
+          g.y += g.dirY * 1.5;
+          let gTX = Math.floor((g.x + tileSize/2) / tileSize);
+          let gTY = Math.floor((g.y + tileSize/2) / tileSize);
+
+          if (Math.floor(g.x) % tileSize === 0 && Math.floor(g.y) % tileSize === 0) {
+            let dirs = [{x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}];
+            let valid = dirs.filter(d => map[gTY + d.y] && map[gTY + d.y][gTX + d.x] !== 1);
+            if (valid.length > 0) {
+              let chosen = valid[Math.floor(Math.random() * valid.length)];
+              g.dirX = chosen.x; g.dirY = chosen.y;
+            }
+          }
+
+          // Collision with Player
+          let dist = Math.hypot((pac.x + tileSize/2) - (g.x + tileSize/2), (pac.y + tileSize/2) - (g.y + tileSize/2));
+          if (dist < tileSize * 0.8) {
+            playSound('gameover');
+            saveHighScore('pacman', score);
+            showOverlay('CAUGHT BY GHOST!', `Final Score: ${score}`);
+            return;
+          }
+        });
+
+        draw();
+        if (currentGame === 'pacman') gameLoopReq = requestAnimationFrame(update);
+      }
+
+      function draw() {
+        ctx.fillStyle = '#080811';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw Map Walls & Pellets
+        for (let r = 0; r < map.length; r++) {
+          for (let c = 0; c < map[r].length; c++) {
+            if (map[r][c] === 1) {
+              ctx.fillStyle = '#9d00ff';
+              ctx.fillRect(c * tileSize, r * tileSize, tileSize - 1, tileSize - 1);
+            } else if (map[r][c] === 2) {
+              ctx.fillStyle = '#ffe600';
+              ctx.beginPath();
+              ctx.arc(c * tileSize + tileSize/2, r * tileSize + tileSize/2, 3, 0, Math.PI * 2);
+              ctx.fill();
+            } else if (map[r][c] === 3) {
+              ctx.fillStyle = '#ff007f';
+              ctx.beginPath();
+              ctx.arc(c * tileSize + tileSize/2, r * tileSize + tileSize/2, 6, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+        }
+
+        // Draw Player (Pac)
+        ctx.fillStyle = '#ffe600';
+        ctx.beginPath();
+        ctx.arc(pac.x + tileSize/2, pac.y + tileSize/2, tileSize/2 - 2, 0.2 * Math.PI, 1.8 * Math.PI);
+        ctx.lineTo(pac.x + tileSize/2, pac.y + tileSize/2);
+        ctx.fill();
+
+        // Draw Ghosts
+        ghosts.forEach(g => {
+          ctx.fillStyle = g.color;
+          ctx.beginPath();
+          ctx.arc(g.x + tileSize/2, g.y + tileSize/2 - 2, tileSize/2 - 2, Math.PI, 0, false);
+          ctx.lineTo(g.x + tileSize - 2, g.y + tileSize);
+          ctx.lineTo(g.x + 2, g.y + tileSize);
+          ctx.fill();
+        });
+      }
+
+      update();
+    }
+
+    /* ==========================================================================
+       GAME 2: SPACE INVADERS / GALAXY DEFENDER
+       ========================================================================== */
+    function initInvaders() {
+      document.getElementById('game-instructions').textContent = "Left/Right Arrows to Move, Spacebar to Shoot.";
+      
+      let player = { x: canvas.width / 2 - 15, y: canvas.height - 30, w: 30, h: 15, speed: 4 };
+      let bullets = [];
+      let invaders = [];
+      let invaderCols = 8, invaderRows = 3;
+      let invDirection = 1, invSpeed = 1;
+
+      for (let r = 0; r < invaderRows; r++) {
+        for (let c = 0; c < invaderCols; c++) {
+          invaders.push({
+            x: 50 + c * 50,
+            y: 30 + r * 35,
+            w: 25, h: 20, alive: true
+          });
+        }
+      }
+
+      let lastShot = 0;
+
+      function update() {
+        if ((keys['ArrowLeft'] || keys['KeyA']) && player.x > 0) player.x -= player.speed;
+        if ((keys['ArrowRight'] || keys['KeyD']) && player.x < canvas.width - player.w) player.x += player.speed;
+
+        if (keys['Space'] && Date.now() - lastShot > 250) {
+          bullets.push({ x: player.x + player.w / 2 - 2, y: player.y, w: 4, h: 10 });
+          playSound('beep');
+          lastShot = Date.now();
+        }
+
+        // Update Bullets
+        bullets.forEach((b, i) => {
+          b.y -= 6;
+          if (b.y < 0) bullets.splice(i, 1);
+        });
+
+        // Invaders Movement Edge Shift
+        let shiftDown = false;
+        invaders.forEach(inv => {
+          if (!inv.alive) return;
+          inv.x += invDirection * invSpeed;
+          if (inv.x > canvas.width - 30 || inv.x < 10) shiftDown = true;
+        });
+
+        if (shiftDown) {
+          invDirection *= -1;
+          invaders.forEach(inv => { inv.y += 12; });
+        }
+
+        // Bullet Invader Collisions
+        bullets.forEach((b, bi) => {
+          invaders.forEach(inv => {
+            if (inv.alive && b.x < inv.x + inv.w && b.x + b.w > inv.x && b.y < inv.y + inv.h && b.y + b.h > inv.y) {
+              inv.alive = false;
+              bullets.splice(bi, 1);
+              score += 20;
+              document.getElementById('stage-score').textContent = score;
+              playSound('hit');
+            }
+          });
+        });
+
+        // Win / Fail Check
+        let aliveCount = invaders.filter(i => i.alive).length;
+        if (aliveCount === 0) {
+          playSound('win');
+          saveHighScore('invaders', score);
+          showOverlay('VICTORY!', `You cleared the Galaxy! Score: ${score}`);
+          return;
+        }
+
+        invaders.forEach(inv => {
+          if (inv.alive && inv.y + inv.h >= player.y) {
+            playSound('gameover');
+            saveHighScore('invaders', score);
+            showOverlay('EARTH CONQUERED!', `Final Score: ${score}`);
+            return;
+          }
+        });
+
+        draw();
+        if (currentGame === 'invaders') gameLoopReq = requestAnimationFrame(update);
+      }
+
+      function draw() {
+        ctx.fillStyle = '#080811';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Player Cannon
+        ctx.fillStyle = '#00f0ff';
+        ctx.fillRect(player.x, player.y, player.w, player.h);
+        ctx.fillRect(player.x + player.w/2 - 3, player.y - 6, 6, 6);
+
+        // Bullets
+        ctx.fillStyle = '#ffe600';
+        bullets.forEach(b => ctx.fillRect(b.x, b.y, b.w, b.h));
+
+        // Invaders
+        invaders.forEach(inv => {
+          if (inv.alive) {
+            ctx.fillStyle = '#ff007f';
+            ctx.fillRect(inv.x, inv.y, inv.w, inv.h);
+            ctx.fillStyle = '#080811';
+            ctx.fillRect(inv.x + 4, inv.y + 4, 4, 4);
+            ctx.fillRect(inv.x + inv.w - 8, inv.y + 4, 4, 4);
+          }
+        });
+      }
+
+      update();
+    }
+
+    /* ==========================================================================
+       GAME 3: RETRO SNAKE
+       ========================================================================== */
+    function initSnake() {
+      document.getElementById('game-instructions').textContent = "Use Arrow keys to guide the snake to apples.";
+      const gridSize = 15;
+      let snake = [{x: 10, y: 10}, {x: 9, y: 10}];
+      let dir = {x: 1, y: 0};
+      let apple = {x: 15, y: 15};
+      let moveCounter = 0;
+
+      function spawnApple() {
+        apple = {
+          x: Math.floor(Math.random() * (canvas.width / gridSize)),
+          y: Math.floor(Math.random() * (canvas.height / gridSize))
+        };
+      }
+
+      function update() {
+        if (keys['ArrowUp'] && dir.y === 0) { dir = {x: 0, y: -1}; }
+        if (keys['ArrowDown'] && dir.y === 0) { dir = {x: 0, y: 1}; }
+        if (keys['ArrowLeft'] && dir.x === 0) { dir = {x: -1, y: 0}; }
+        if (keys['ArrowRight'] && dir.x === 0) { dir = {x: 1, y: 0}; }
+
+        moveCounter++;
+        if (moveCounter >= 6) { // Speed regulator
+          moveCounter = 0;
+          let head = {x: snake[0].x + dir.x, y: snake[0].y + dir.y};
+
+          // Wall Collisions
+          if (head.x < 0 || head.x >= canvas.width / gridSize || head.y < 0 || head.y >= canvas.height / gridSize) {
+            playSound('gameover');
+            saveHighScore('snake', score);
+            showOverlay('SNAKE CRASHED!', `Score: ${score}`);
+            return;
+          }
+
+          // Self Collision
+          for (let seg of snake) {
+            if (seg.x === head.x && seg.y === head.y) {
+              playSound('gameover');
+              saveHighScore('snake', score);
+              showOverlay('GAME OVER!', `Tail Collided! Score: ${score}`);
+              return;
+            }
+          }
+
+          snake.unshift(head);
+
+          // Apple Eat Check
+          if (head.x === apple.x && head.y === apple.y) {
+            score += 10;
+            document.getElementById('stage-score').textContent = score;
+            playSound('score');
+            spawnApple();
+          } else {
+            snake.pop();
+          }
+        }
+
+        draw();
+        if (currentGame === 'snake') gameLoopReq = requestAnimationFrame(update);
+      }
+
+      function draw() {
+        ctx.fillStyle = '#080811';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Apple
+        ctx.fillStyle = '#ff007f';
+        ctx.fillRect(apple.x * gridSize, apple.y * gridSize, gridSize - 1, gridSize - 1);
+
+        // Snake Body
+        snake.forEach((seg, i) => {
+          ctx.fillStyle = i === 0 ? '#00ff66' : '#00f0ff';
+          ctx.fillRect(seg.x * gridSize, seg.y * gridSize, gridSize - 1, gridSize - 1);
+        });
+      }
+
+      spawnApple();
+      update();
+    }
+
+    /* ==========================================================================
+       GAME 4: BRICK BREAKER
+       ========================================================================== */
+    function initBreakout() {
+      document.getElementById('game-instructions').textContent = "Move Paddle with Left/Right arrows to bounce ball.";
+      let paddle = { x: canvas.width/2 - 40, w: 80, h: 12, speed: 6 };
+      let ball = { x: canvas.width/2, y: canvas.height - 40, dx: 3, dy: -3, radius: 6 };
+      
+      let rows = 4, cols = 8;
+      let bricks = [];
+      let brickWidth = 65, brickHeight = 18, padding = 8, offsetTop = 30, offsetLeft = 10;
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          bricks.push({ x: offsetLeft + c * (brickWidth + padding), y: offsetTop + r * (brickHeight + padding), alive: true });
+        }
+      }
+
+      function update() {
+        if ((keys['ArrowLeft'] || keys['KeyA']) && paddle.x > 0) paddle.x -= paddle.speed;
+        if ((keys['ArrowRight'] || keys['KeyD']) && paddle.x < canvas.width - paddle.w) paddle.x += paddle.speed;
+
+        ball.x += ball.dx;
+        ball.y += ball.dy;
+
+        // Bounce off left/right
+        if (ball.x < ball.radius || ball.x > canvas.width - ball.radius) { ball.dx *= -1; playSound('hit'); }
+        // Bounce off top
+        if (ball.y < ball.radius) { ball.dy *= -1; playSound('hit'); }
+
+        // Bounce off Paddle
+        if (ball.y + ball.radius >= canvas.height - paddle.h - 10 && ball.x >= paddle.x && ball.x <= paddle.x + paddle.w) {
+          ball.dy = -Math.abs(ball.dy);
+          playSound('hit');
+        }
+
+        // Brick Hit Detection
+        bricks.forEach(b => {
+          if (b.alive && ball.x > b.x && ball.x < b.x + brickWidth && ball.y > b.y && ball.y < b.y + brickHeight) {
+            b.alive = false;
+            ball.dy *= -1;
+            score += 15;
+            document.getElementById('stage-score').textContent = score;
+            playSound('score');
+          }
+        });
+
+        // Bottom Fail
+        if (ball.y > canvas.height) {
+          playSound('gameover');
+          saveHighScore('breakout', score);
+          showOverlay('BALL DROPPED!', `Score: ${score}`);
+          return;
+        }
+
+        // Victory
+        if (bricks.every(b => !b.alive)) {
+          playSound('win');
+          saveHighScore('breakout', score);
+          showOverlay('ALL BRICKS DESTROYED!', `Score: ${score}`);
+          return;
+        }
+
+        draw();
+        if (currentGame === 'breakout') gameLoopReq = requestAnimationFrame(update);
+      }
+
+      function draw() {
+        ctx.fillStyle = '#080811';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Paddle
+        ctx.fillStyle = '#00f0ff';
+        ctx.fillRect(paddle.x, canvas.height - paddle.h - 10, paddle.w, paddle.h);
+
+        // Ball
+        ctx.fillStyle = '#ffe600';
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Bricks
+        const colors = ['#ff007f', '#9d00ff', '#00f0ff', '#00ff66'];
+        bricks.forEach((b, i) => {
+          if (b.alive) {
+            ctx.fillStyle = colors[i % colors.length];
+            ctx.fillRect(b.x, b.y, brickWidth, brickHeight);
+          }
+        });
+      }
+
+      update();
+    }
+
+    /* ==========================================================================
+       GAME 5: NEON PONG
+       ========================================================================== */
+    function initPong() {
+      // Add Mode Switcher UI
+      const modeBar = document.getElementById('mode-selector');
+      modeBar.innerHTML = `
+        <button onclick="gameMode='1P'; restartCurrentGame();" class="px-2 py-1 rounded ${gameMode==='1P'?'bg-synth-pink text-white':'bg-synth-card text-gray-400'} font-arcade border border-synth-pink">VS AI</button>
+        <button onclick="gameMode='2P'; restartCurrentGame();" class="px-2 py-1 rounded ${gameMode==='2P'?'bg-synth-pink text-white':'bg-synth-card text-gray-400'} font-arcade border border-synth-pink">2 PLAYER</button>
+      `;
+      document.getElementById('game-instructions').textContent = gameMode === '1P' ? "Up/Down arrows to control left paddle." : "P1: W/S, P2: Arrow Up/Down.";
+
+      let paddleHeight = 60, paddleWidth = 10;
+      let p1 = { x: 10, y: canvas.height/2 - 30, score: 0 };
+      let p2 = { x: canvas.width - 20, y: canvas.height/2 - 30, score: 0 };
+      let ball = { x: canvas.width/2, y: canvas.height/2, dx: 4, dy: 3, radius: 6 };
+
+      function update() {
+        // Player 1
+        if (keys['KeyW'] || keys['ArrowUp']) { if(p1.y > 0) p1.y -= 5; }
+        if (keys['KeyS'] || keys['ArrowDown']) { if(p1.y < canvas.height - paddleHeight) p1.y += 5; }
+
+        // Player 2 or AI
+        if (gameMode === '2P') {
+          if (keys['ArrowUp'] && p2.y > 0) p2.y -= 5;
+          if (keys['ArrowDown'] && p2.y < canvas.height - paddleHeight) p2.y += 5;
+        } else {
+          // AI simple tracking logic
+          let center = p2.y + paddleHeight/2;
+          if (center < ball.y - 10) p2.y += 3.5;
+          else if (center > ball.y + 10) p2.y -= 3.5;
+        }
+
+        ball.x += ball.dx;
+        ball.y += ball.dy;
+
+        // Top/Bottom bounce
+        if (ball.y < ball.radius || ball.y > canvas.height - ball.radius) { ball.dy *= -1; playSound('hit'); }
+
+        // Collision P1
+        if (ball.x - ball.radius <= p1.x + paddleWidth && ball.y >= p1.y && ball.y <= p1.y + paddleHeight) {
+          ball.dx = Math.abs(ball.dx) + 0.2;
+          playSound('hit');
+        }
+
+        // Collision P2
+        if (ball.x + ball.radius >= p2.x && ball.y >= p2.y && ball.y <= p2.y + paddleHeight) {
+          ball.dx = -Math.abs(ball.dx) - 0.2;
+          playSound('hit');
+        }
+
+        // Goal Check
+        if (ball.x < 0) {
+          p2.score++; playSound('gameover'); resetBall();
+        } else if (ball.x > canvas.width) {
+          p1.score++; score += 100; playSound('score'); resetBall();
+        }
+
+        document.getElementById('stage-score').textContent = p1.score + " - " + p2.score;
+
+        if (p1.score >= 5 || p2.score >= 5) {
+          saveHighScore('pong', p1.score);
+          showOverlay(p1.score >= 5 ? "P1 VICTORIOUS!" : "P2 / AI WINS!", `Final Score: ${p1.score} - ${p2.score}`);
+          return;
+        }
+
+        draw();
+        if (currentGame === 'pong') gameLoopReq = requestAnimationFrame(update);
+      }
+
+      function resetBall() {
+        ball = { x: canvas.width/2, y: canvas.height/2, dx: (Math.random() > 0.5 ? 4 : -4), dy: 3, radius: 6 };
+      }
+
+      function draw() {
+        ctx.fillStyle = '#080811';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Center line
+        ctx.strokeStyle = '#333';
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.moveTo(canvas.width/2, 0); ctx.lineTo(canvas.width/2, canvas.height);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Paddles
+        ctx.fillStyle = '#00f0ff';
+        ctx.fillRect(p1.x, p1.y, paddleWidth, paddleHeight);
+
+        ctx.fillStyle = '#ff007f';
+        ctx.fillRect(p2.x, p2.y, paddleWidth, paddleHeight);
+
+        // Ball
+        ctx.fillStyle = '#ffe600';
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      update();
+    }
+
+    /* ==========================================================================
+       GAME 6: TIC-TAC-TOE
+       ========================================================================== */
+    function initTicTacToe() {
+      const modeBar = document.getElementById('mode-selector');
+      modeBar.innerHTML = `
+        <button onclick="gameMode='1P'; restartCurrentGame();" class="px-2 py-1 rounded ${gameMode==='1P'?'bg-synth-pink text-white':'bg-synth-card text-gray-400'} font-arcade border border-synth-pink">VS AI</button>
+        <button onclick="gameMode='2P'; restartCurrentGame();" class="px-2 py-1 rounded ${gameMode==='2P'?'bg-synth-pink text-white':'bg-synth-card text-gray-400'} font-arcade border border-synth-pink">2 PLAYER</button>
+      `;
+
+      let board = Array(9).fill(null);
+      let turn = 'X';
+
+      boardContainer.innerHTML = `
+        <div class="grid grid-cols-3 gap-3 w-64 h-64 mx-auto">
+          ${[0,1,2,3,4,5,6,7,8].map(i => `
+            <button onclick="makeTTTMove(${i})" id="ttt-${i}" class="bg-synth-card border-2 border-synth-pink/40 rounded-lg text-3xl font-arcade flex items-center justify-center hover:border-synth-cyan transition text-synth-cyan">
+            </button>
+          `).join('')}
+        </div>
+      `;
+
+      window.makeTTTMove = function(index) {
+        if (board[index] || checkTTTWinner(board)) return;
+
+        board[index] = turn;
+        updateTTTBoard();
+        playSound('beep');
+
+        if (checkTTTWinner(board)) {
+          handleTTTEnd(turn === 'X' ? 'PLAYER X WINS!' : 'PLAYER O WINS!');
+          return;
+        }
+
+        if (board.every(cell => cell)) {
+          handleTTTEnd('DRAW GAME!');
+          return;
+        }
+
+        turn = turn === 'X' ? 'O' : 'X';
+
+        if (gameMode === '1P' && turn === 'O') {
+          setTimeout(() => {
+            let empty = board.map((v, i) => v === null ? i : null).filter(v => v !== null);
+            if (empty.length > 0) {
+              let aiMove = empty[Math.floor(Math.random() * empty.length)];
+              makeTTTMove(aiMove);
+            }
+          }, 300);
+        }
+      };
+
+      function updateTTTBoard() {
+        board.forEach((val, i) => {
+          const btn = document.getElementById(`ttt-${i}`);
+          if (btn) {
+            btn.textContent = val || '';
+            btn.className = `bg-synth-card border-2 border-synth-pink/40 rounded-lg text-3xl font-arcade flex items-center justify-center hover:border-synth-cyan transition ${val === 'X' ? 'text-synth-cyan' : 'text-synth-pink'}`;
+          }
+        });
+      }
+
+      function checkTTTWinner(b) {
+        const lines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+        for (let l of lines) {
+          if (b[l[0]] && b[l[0]] === b[l[1]] && b[l[0]] === b[l[2]]) return b[l[0]];
+        }
+        return null;
+      }
+
+      function handleTTTEnd(msg) {
+        if (msg.includes('X WINS')) {
+          score += 1;
+          saveHighScore('tictactoe', score);
+          playSound('win');
+        } else {
+          playSound('gameover');
+        }
+        showOverlay(msg, `Session Wins: ${score}`);
+      }
+    }
+
+    /* ==========================================================================
+       GAME 7: CONNECT FOUR
+       ========================================================================== */
+    function initConnect4() {
+      const modeBar = document.getElementById('mode-selector');
+      modeBar.innerHTML = `
+        <button onclick="gameMode='1P'; restartCurrentGame();" class="px-2 py-1 rounded ${gameMode==='1P'?'bg-synth-pink text-white':'bg-synth-card text-gray-400'} font-arcade border border-synth-pink">VS AI</button>
+        <button onclick="gameMode='2P'; restartCurrentGame();" class="px-2 py-1 rounded ${gameMode==='2P'?'bg-synth-pink text-white':'bg-synth-card text-gray-400'} font-arcade border border-synth-pink">2 PLAYER</button>
+      `;
+
+      let grid = Array(6).fill(null).map(() => Array(7).fill(null));
+      let turn = 'cyan'; // 'cyan' or 'pink'
+
+      renderC4();
+
+      function renderC4() {
+        boardContainer.innerHTML = `
+          <div class="bg-synth-card p-3 rounded-xl border border-synth-cyan/40 shadow-2xl">
+            <div class="grid grid-cols-7 gap-2">
+              ${[0,1,2,3,4,5,6].map(c => `
+                <button onclick="dropC4(${c})" class="h-8 bg-synth-purple/30 rounded border border-synth-purple text-synth-cyan hover:bg-synth-cyan hover:text-black font-arcade text-xs">
+                  ↓
+                </button>
+              `).join('')}
+            </div>
+            <div class="grid grid-cols-7 gap-2 mt-3">
+              ${grid.map((row, r) => row.map((cell, c) => `
+                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-gray-700 flex items-center justify-center transition-all ${cell === 'cyan' ? 'bg-synth-cyan box-glow-cyan' : cell === 'pink' ? 'bg-synth-pink box-glow-pink' : 'bg-black/60'}">
+                </div>
+              `).join('')).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      window.dropC4 = function(col) {
+        for (let r = 5; r >= 0; r--) {
+          if (!grid[r][col]) {
+            grid[r][col] = turn;
+            playSound('beep');
+            renderC4();
+
+            if (checkC4Win(r, col)) {
+              playSound('win');
+              if (turn === 'cyan') score++;
+              saveHighScore('connect4', score);
+              showOverlay(`${turn.toUpperCase()} DISCS CONNECTED!`, `Wins: ${score}`);
+              return;
+            }
+
+            turn = turn === 'cyan' ? 'pink' : 'cyan';
+
+            if (gameMode === '1P' && turn === 'pink') {
+              setTimeout(() => {
+                let avail = [0,1,2,3,4,5,6].filter(c => !grid[0][c]);
+                if (avail.length > 0) dropC4(avail[Math.floor(Math.random() * avail.length)]);
+              }, 400);
+            }
+            return;
+          }
+        }
+      };
+
+      function checkC4Win(r, c) {
+        const color = grid[r][c];
+        const checkDir = (dr, dc) => {
+          let count = 0;
+          for (let i = -3; i <= 3; i++) {
+            let nr = r + i * dr, nc = c + i * dc;
+            if (nr >= 0 && nr < 6 && nc >= 0 && nc < 7 && grid[nr][nc] === color) {
+              count++;
+              if (count === 4) return true;
+            } else count = 0;
+          }
+          return false;
+        };
+        return checkDir(0,1) || checkDir(1,0) || checkDir(1,1) || checkDir(1,-1);
+      }
+    }
+
+    /* ==========================================================================
+       GAME 8: RETRO CHECKERS
+       ========================================================================== */
+    function initCheckers() {
+      let selected = null;
+      let board = Array(8).fill(null).map((_, r) => Array(8).fill(null).map((_, c) => {
+        if ((r + c) % 2 === 1) {
+          if (r < 3) return { player: 'red', king: false };
+          if (r > 4) return { player: 'cyan', king: false };
+        }
+        return null;
+      }));
+
+      renderCheckers();
+
+      function renderCheckers() {
+        boardContainer.innerHTML = `
+          <div class="grid grid-cols-8 gap-1 p-2 bg-synth-card rounded-lg border border-synth-pink/30 w-72 h-72 sm:w-80 sm:h-80">
+            ${board.map((row, r) => row.map((cell, c) => `
+              <div onclick="clickCheckers(${r}, ${c})" class="w-full h-full flex items-center justify-center rounded-sm cursor-pointer ${(r+c)%2===1?'bg-gray-900':'bg-synth-card/40'} ${selected && selected.r===r && selected.c===c?'border-2 border-synth-yellow':''}">
+                ${cell ? `
+                  <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center font-bold text-xs ${cell.player==='cyan'?'bg-synth-cyan text-black box-glow-cyan':'bg-synth-pink text-white box-glow-pink'}">
+                    ${cell.king ? '★' : ''}
+                  </div>
+                ` : ''}
+              </div>
+            `).join('')).join('')}
+          </div>
+        `;
+      }
+
+      window.clickCheckers = function(r, c) {
+        let piece = board[r][c];
+        if (piece && piece.player === 'cyan') {
+          selected = { r, c };
+          playSound('beep');
+          renderCheckers();
+          return;
+        }
+
+        if (selected && !piece && (r + c) % 2 === 1) {
+          // Simple forward move check
+          if (Math.abs(selected.c - c) === 1 && (selected.r - r === 1 || (board[selected.r][selected.c].king && Math.abs(selected.r - r) === 1))) {
+            board[r][c] = board[selected.r][selected.c];
+            board[selected.r][selected.c] = null;
+            if (r === 0) board[r][c].king = true;
+            selected = null;
+            playSound('hit');
+            renderCheckers();
+            aiCheckersMove();
+          }
+        }
+      };
+
+      function aiCheckersMove() {
+        setTimeout(() => {
+          let moves = [];
+          for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+              if (board[r][c] && board[r][c].player === 'red') {
+                if (r + 1 < 8 && c - 1 >= 0 && !board[r+1][c-1]) moves.push({from:{r,c}, to:{r:r+1,c:c-1}});
+                if (r + 1 < 8 && c + 1 < 8 && !board[r+1][c+1]) moves.push({from:{r,c}, to:{r:r+1,c:c+1}});
+              }
+            }
+          }
+          if (moves.length > 0) {
+            let m = moves[Math.floor(Math.random() * moves.length)];
+            board[m.to.r][m.to.c] = board[m.from.r][m.from.c];
+            board[m.from.r][m.from.c] = null;
+            if (m.to.r === 7) board[m.to.r][m.to.c].king = true;
+            renderCheckers();
+          }
+        }, 400);
+      }
+    }
+
+    /* ==========================================================================
+       GAME 9: MEMORY MATCH
+       ========================================================================== */
+    function initMemory() {
+      document.getElementById('game-instructions').textContent = "Flip cards to find pairs in the shortest time!";
+      const icons = ['fa-ghost', 'fa-gamepad', 'fa-space-shuttle', 'fa-cube', 'fa-bolt', 'fa-heart'];
+      let cards = [...icons, ...icons].sort(() => Math.random() - 0.5);
+      let flipped = [];
+      let matched = [];
+      let startTime = Date.now();
+
+      renderMemory();
+
+      function renderMemory() {
+        boardContainer.innerHTML = `
+          <div class="grid grid-cols-4 gap-3 w-72 sm:w-80 mx-auto">
+            ${cards.map((icon, idx) => `
+              <button onclick="flipMemoryCard(${idx})" class="h-16 bg-synth-card border-2 ${matched.includes(idx) || flipped.includes(idx) ? 'border-synth-cyan text-synth-cyan' : 'border-synth-pink/40 text-transparent'} rounded-xl text-2xl flex items-center justify-center transition-all">
+                <i class="fa-solid ${icon}"></i>
+              </button>
+            `).join('')}
+          </div>
+        `;
+      }
+
+      window.flipMemoryCard = function(idx) {
+        if (flipped.length >= 2 || flipped.includes(idx) || matched.includes(idx)) return;
+        
+        flipped.push(idx);
+        playSound('beep');
+        renderMemory();
+
+        if (flipped.length === 2) {
+          let [a, b] = flipped;
+          if (cards[a] === cards[b]) {
+            matched.push(a, b);
+            flipped = [];
+            playSound('score');
+            renderMemory();
+
+            if (matched.length === cards.length) {
+              let elapsed = Math.floor((Date.now() - startTime) / 1000);
+              saveHighScore('memory', elapsed);
+              playSound('win');
+              showOverlay('ALL PAIRS MATCHED!', `Time Taken: ${elapsed} seconds`);
+            }
+          } else {
+            setTimeout(() => {
+              flipped = [];
+              renderMemory();
+            }, 800);
+          }
+        }
+      };
+    }
+
+    // INITIAL LAUNCH ON WINDOW LOAD
+    window.onload = function() {
+      updateHighScoreDisplay();
+    };
+  </script>
+</body>
+</html>
